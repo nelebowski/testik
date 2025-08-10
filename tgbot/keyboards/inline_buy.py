@@ -11,8 +11,21 @@ PER_PAGE = 25
 
 def servers_kb(page: int = 0) -> InlineKeyboardMarkup:
     builder = InlineKeyboardBuilder()
+
+    total = len(SERVERS)
+    if total == 0:
+        builder.row(ikb("🔙 В меню", data="back_to_menu"))
+        return builder.as_markup()
+
+    # clamp page
+    if page < 0:
+        page = 0
+    max_page = (total - 1) // PER_PAGE
+    if page > max_page:
+        page = max_page
+
     start = page * PER_PAGE
-    end = min(start + PER_PAGE, len(SERVERS))
+    end = min(start + PER_PAGE, total)
 
     for idx, server in enumerate(SERVERS[start:end], start=start):
         builder.button(text=server, callback_data=f"server_select:{idx}")
@@ -22,7 +35,7 @@ def servers_kb(page: int = 0) -> InlineKeyboardMarkup:
     if page > 0:
         nav.append(ikb("⬅️ Назад", data=f"servers_page:{page-1}"))
     nav.append(ikb("🔙 В меню", data="back_to_menu"))
-    if end < len(SERVERS):
+    if end < total:
         nav.append(ikb("Вперед ➡️", data=f"servers_page:{page+1}"))
 
     if nav:

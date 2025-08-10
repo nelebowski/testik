@@ -37,6 +37,7 @@ router = Router(name=__name__)
 
 ################################################################################
 ########################### СТАТУС ТЕХНИЧЕСКИХ РАБОТ ###########################
+
 # Фильтр на технические работы - сообщение
 @router.message(IsWork())
 async def filter_work_message(message: Message, bot: Bot, state: FSM, arSession: ARS):
@@ -59,6 +60,7 @@ async def filter_work_callback(call: CallbackQuery, bot: Bot, state: FSM, arSess
 
 ################################################################################
 ################################# СТАТУС ПОКУПОК ###############################
+
 # Фильтр на доступность покупок - сообщение
 @router.message(IsBuy(), F.text == "🎁 Купить")
 @router.message(IsBuy(), StateFilter("here_item_count"))
@@ -74,6 +76,7 @@ async def filter_buy_callback(call: CallbackQuery, bot: Bot, state: FSM, arSessi
 
 ################################################################################
 ############################### СТАТУС ПОПОЛНЕНИЙ ##############################
+
 # Фильтр на доступность пополнения - сообщение
 @router.message(IsRefill(), StateFilter("here_pay_amount"))
 async def filter_refill_message(message: Message, bot: Bot, state: FSM, arSession: ARS):
@@ -88,6 +91,7 @@ async def filter_refill_callback(call: CallbackQuery, bot: Bot, state: FSM, arSe
 
 ################################################################################
 #################################### ПРОЧЕЕ ####################################
+
 # Открытие главного меню
 @router.message(F.text.in_(("🔙 Главное меню", "/start")))
 async def main_start(message: Message, bot: Bot, state: FSM, arSession: ARS):

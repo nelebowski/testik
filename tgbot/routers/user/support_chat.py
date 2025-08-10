@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 """Simple support chat between user and admins."""
+from typing import Union
+
 from aiogram import Router, F, Bot
 from aiogram.filters import StateFilter
 from aiogram.types import CallbackQuery, Message
@@ -33,9 +35,9 @@ async def support_message(message: Message, state: FSM, bot: Bot):
     admin_kb.row(ikb("Завершить", data=f"support_close:{message.from_user.id}"))
 
     for admin in get_admins():
-        # Сохраняем оригинал (текст/медиа) через forward
+        # Пересылаем оригинал (текст/медиа), чтобы админ видел контекст
         await message.forward(admin)
-        # Пояснение + кнопки для действий
+        # Сообщение с кнопками действий
         await bot.send_message(
             admin,
             f"Ответить пользователю {message.from_user.id}",
@@ -80,9 +82,10 @@ async def support_admin_reply(message: Message, state: FSM, bot: Bot):
     user_kb.row(ikb("❌ Завершить", data="support_stop"))
     user_kb.row(ikb("🔙 В меню", data="back_to_menu"))
 
+    text = message.text or "Сообщение без текста."
     await bot.send_message(
         user_id,
-        f"Ответ поддержки:\n{message.text}",
+        f"Ответ поддержки:\n{text}",
         reply_markup=user_kb.as_markup(),
     )
     await message.answer("Отправлено.")
@@ -102,7 +105,7 @@ async def support_admin_cancel(call: CallbackQuery, state: FSM):
 
 @router.callback_query(F.data == "support_stop", StateFilter("support_chat"))
 @router.message(F.text == "/stop", StateFilter("support_chat"))
-async def support_stop(event, state: FSM):
+async def support_stop(event: Union[CallbackQuery, Message], state: FSM):
     await state.clear()
     if isinstance(event, CallbackQuery):
         await event.message.edit_text(
@@ -149,8 +152,7 @@ async def admin_reply_cmd(message: Message, bot: Bot):
         await message.answer("user_id должен быть числом.")
         return
 
-    text = parts[2]
-    await bot.send_message(user_id, f"Ответ поддержки:\n{text}")
+    await bot.send_message(user_id, f"Ответ поддержки:\n{parts[2]}")
     await message.answer("Отправлено.")
 
 
