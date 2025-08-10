@@ -1,4 +1,4 @@
-# - *- coding: utf-8 - *-
+# -*- coding: utf-8 -*-
 """Inline keyboards for buying virtual currency."""
 from aiogram.types import InlineKeyboardMarkup
 from aiogram.utils.keyboard import InlineKeyboardBuilder
@@ -11,8 +11,10 @@ PER_PAGE = 25
 
 def servers_kb(page: int = 0) -> InlineKeyboardMarkup:
     builder = InlineKeyboardBuilder()
+
     start = page * PER_PAGE
     end = min(start + PER_PAGE, len(SERVERS))
+
     for idx, server in enumerate(SERVERS[start:end], start=start):
         builder.row(ikb(server, data=f"server_select:{idx}"))
 
@@ -22,8 +24,10 @@ def servers_kb(page: int = 0) -> InlineKeyboardMarkup:
     nav.append(ikb("🔙 В меню", data="back_to_menu"))
     if end < len(SERVERS):
         nav.append(ikb("Вперед ➡️", data=f"servers_page:{page+1}"))
+
     if nav:
         builder.row(*nav)
+
     return builder.as_markup()
 
 
@@ -32,5 +36,14 @@ def payment_methods_kb() -> InlineKeyboardMarkup:
     builder.row(ikb("Cryptobot", data="pay_method:cryptobot"))
     builder.row(ikb("ЮMoney", data="pay_method:yoomoney"))
     builder.row(ikb("Telegram Stars", data="pay_method:stars"))
+    builder.row(ikb("🔙 В меню", data="back_to_menu"))
+    return builder.as_markup()
+
+
+def payment_bill_kb(link: str, receipt: str, method: str) -> InlineKeyboardMarkup:
+    """Keyboard with link and check button for generated invoices."""
+    builder = InlineKeyboardBuilder()
+    builder.row(ikb("🌀 Перейти к оплате", url=link))
+    builder.row(ikb("🔄 Проверить оплату", data=f"BuyPay:{method}:{receipt}"))
     builder.row(ikb("🔙 В меню", data="back_to_menu"))
     return builder.as_markup()

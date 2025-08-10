@@ -33,6 +33,8 @@ def payments_frep() -> ReplyKeyboardMarkup:
     keyboard.row(
         rkb("🔷 CryptoBot"), rkb("🔮 ЮMoney"),
     ).row(
+        rkb("⭐️ Telegram Stars"),
+    ).row(
         rkb("🔙 Главное меню"),
     )
 
