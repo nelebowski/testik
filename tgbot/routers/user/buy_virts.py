@@ -37,12 +37,14 @@ def parse_amount(text: str) -> int:
 async def buy_start(call: CallbackQuery, state: FSM):
     await state.set_state("buy_server")
     await call.message.edit_text("<b>Выберите сервер:</b>", reply_markup=servers_kb(0))
+    await call.answer()
 
 
 @router.callback_query(F.data.startswith("servers_page:"), StateFilter("buy_server"))
 async def servers_page(call: CallbackQuery, state: FSM):
     page = int(call.data.split(":")[1])
     await call.message.edit_reply_markup(reply_markup=servers_kb(page))
+    await call.answer()
 
 
 @router.callback_query(F.data.startswith("server_select:"), StateFilter("buy_server"))
@@ -54,16 +56,16 @@ async def server_selected(call: CallbackQuery, state: FSM):
     await call.message.edit_text(
         f"<b>Сервер {server}</b>\nВведите количество валюты (например 1кк):"
     )
+    await call.answer()
 
 
 @router.message(StateFilter("buy_amount"))
 async def amount_input(message: Message, state: FSM):
     amount = parse_amount(message.text)
     if amount < 500_000:
-        await message.answer(
-            "Минимальная сумма покупки — 0.5кк (500 000). Попробуйте снова:"
-        )
+        await message.answer("Минимальная сумма покупки — 0.5кк (500 000). Попробуйте снова:")
         return
+
     price = ceil(amount / 1_000_000 * 99)  # ₽
     await state.update_data(amount=amount, price=price)
     await state.set_state("buy_account")
@@ -74,9 +76,7 @@ async def amount_input(message: Message, state: FSM):
 async def account_input(message: Message, state: FSM):
     # простая валидация счёта
     if not message.text.isdigit() or len(message.text) > 7:
-        await message.answer(
-            "Счёт должен содержать только цифры и быть не длиннее 7 знаков. Введите снова:"
-        )
+        await message.answer("Счёт должен содержать только цифры и быть не длиннее 7 знаков. Введите снова:")
         return
 
     account = message.text
@@ -109,7 +109,7 @@ async def payment_choose(call: CallbackQuery, state: FSM, bot: Bot, arSession: A
     price = data["price"]
 
     if method == "stars":
-        # для Stars конвертируем рубли в звёзды (примерный курс)
+        # конвертируем рубли в звёзды (примерный курс)
         stars = ceil(price / 1.4)
         await bot.send_invoice(
             chat_id=call.from_user.id,
@@ -123,14 +123,13 @@ async def payment_choose(call: CallbackQuery, state: FSM, bot: Bot, arSession: A
         await call.message.answer("Оплатите счёт через Telegram Stars.")
         await state.update_data(pay_method="stars")
         await state.set_state("buy_wait_payment")
+        await call.answer()
+        return
 
-    elif method == "cryptobot":
+    if method == "cryptobot":
         bill_message, bill_link, bill_receipt = await CryptobotAPI(
-            bot=bot,
-            arSession=arSession,
-            update=call,
+            bot=bot, arSession=arSession, update=call
         ).bill(price)
-
         if bill_message:
             await state.update_data(pay_method="cryptobot", bill_receipt=bill_receipt)
             await call.message.edit_text(
@@ -140,42 +139,36 @@ async def payment_choose(call: CallbackQuery, state: FSM, bot: Bot, arSession: A
             await state.set_state("buy_wait_payment")
         else:
             await call.message.answer("Не удалось сгенерировать платёж. Попробуйте позже.")
+        await call.answer()
+        return
 
+    # YooMoney по умолчанию
+    bill_message, bill_link, bill_receipt = await YoomoneyAPI(
+        bot=bot, arSession=arSession, update=call
+    ).bill(price)
+    if bill_message:
+        await state.update_data(pay_method="yoomoney", bill_receipt=bill_receipt)
+        await call.message.edit_text(
+            bill_message,
+            reply_markup=payment_bill_kb(bill_link, bill_receipt, "Yoomoney"),
+        )
+        await state.set_state("buy_wait_payment")
     else:
-        bill_message, bill_link, bill_receipt = await YoomoneyAPI(
-            bot=bot,
-            arSession=arSession,
-            update=call,
-        ).bill(price)
-
-        if bill_message:
-            await state.update_data(pay_method="yoomoney", bill_receipt=bill_receipt)
-            await call.message.edit_text(
-                bill_message,
-                reply_markup=payment_bill_kb(bill_link, bill_receipt, "Yoomoney"),
-            )
-            await state.set_state("buy_wait_payment")
-        else:
-            await call.message.answer("Не удалось сгенерировать платёж. Попробуйте позже.")
+        await call.message.answer("Не удалось сгенерировать платёж. Попробуйте позже.")
+    await call.answer()
 
 
-@router.callback_query(
-    F.data.startswith("BuyPay:Cryptobot"), StateFilter("buy_wait_payment")
-)
+@router.callback_query(F.data.startswith("BuyPay:Cryptobot"), StateFilter("buy_wait_payment"))
 async def check_cryptobot(call: CallbackQuery, state: FSM, bot: Bot, arSession: ARS):
     receipt = call.data.split(":")[2]
     pay_status, _ = await CryptobotAPI(
-        bot=bot,
-        arSession=arSession,
-        update=call,
+        bot=bot, arSession=arSession, update=call
     ).bill_check(receipt)
 
     if pay_status == 0:
         data = await state.get_data()
         server, amount, account = data["server"], data["amount"], data["account"]
-        await call.message.edit_text(
-            "Ура! Ваш заказ принят, ожидайте вирты в течение 10 минут."
-        )
+        await call.message.edit_text("Ура! Ваш заказ принят, ожидайте вирты в течение 10 минут.")
         for admin in get_admins():
             await bot.send_message(
                 admin,
@@ -183,30 +176,24 @@ async def check_cryptobot(call: CallbackQuery, state: FSM, bot: Bot, arSession: 
             )
         await state.clear()
     elif pay_status == 2:
-        await call.answer("Оплата не найдена. Попробуйте позже.", True)
+        await call.answer("Оплата не найдена. Попробуйте позже.", show_alert=True)
     elif pay_status == 3:
-        await call.answer("Вы не успели оплатить счёт.", True)
+        await call.answer("Вы не успели оплатить счёт.", show_alert=True)
     else:
-        await call.answer("Не удалось проверить оплату.", True)
+        await call.answer("Не удалось проверить оплату.", show_alert=True)
 
 
-@router.callback_query(
-    F.data.startswith("BuyPay:Yoomoney"), StateFilter("buy_wait_payment")
-)
+@router.callback_query(F.data.startswith("BuyPay:Yoomoney"), StateFilter("buy_wait_payment"))
 async def check_yoomoney(call: CallbackQuery, state: FSM, bot: Bot, arSession: ARS):
     receipt = call.data.split(":")[2]
     pay_status, _ = await YoomoneyAPI(
-        bot=bot,
-        arSession=arSession,
-        update=call,
+        bot=bot, arSession=arSession, update=call
     ).bill_check(receipt)
 
     if pay_status == 0:
         data = await state.get_data()
         server, amount, account = data["server"], data["amount"], data["account"]
-        await call.message.edit_text(
-            "Ура! Ваш заказ принят, ожидайте вирты в течение 10 минут."
-        )
+        await call.message.edit_text("Ура! Ваш заказ принят, ожидайте вирты в течение 10 минут.")
         for admin in get_admins():
             await bot.send_message(
                 admin,
@@ -214,11 +201,11 @@ async def check_yoomoney(call: CallbackQuery, state: FSM, bot: Bot, arSession: A
             )
         await state.clear()
     elif pay_status == 2:
-        await call.answer("Оплата не найдена. Попробуйте позже.", True)
+        await call.answer("Оплата не найдена. Попробуйте позже.", show_alert=True)
     elif pay_status == 3:
-        await call.answer("Оплата произведена не в рублях.", True)
+        await call.answer("Оплата произведена не в рублях.", show_alert=True)
     else:
-        await call.answer("Не удалось проверить оплату.", True)
+        await call.answer("Не удалось проверить оплату.", show_alert=True)
 
 
 @router.message(F.successful_payment, StateFilter("buy_wait_payment"))

@@ -11,14 +11,12 @@ def menu_frep(user_id: int) -> ReplyKeyboardMarkup:
     keyboard = ReplyKeyboardBuilder()
 
     keyboard.row(
-        rkb("🎁 Купить"),
-    ).row(
         rkb("👤 Профиль"), rkb("☎️ Поддержка"),
     )
 
     if user_id in get_admins():
         keyboard.row(
-            rkb("🎁 Управление товарами"), rkb("📊 Статистика"),
+            rkb("📊 Статистика"),
         ).row(
             rkb("⚙️ Настройки"), rkb("🔆 Общие функции"), rkb("🔑 Платежные системы"),
         )
@@ -62,21 +60,6 @@ def settings_frep() -> ReplyKeyboardMarkup:
         rkb("🖍 Изменить данные"), rkb("🕹 Выключатели"),
     ).row(
         rkb("🔙 Главное меню"),
-    )
-
-    return keyboard.as_markup(resize_keyboard=True)
-
-
-# Кнопки изменения товаров
-def items_frep() -> ReplyKeyboardMarkup:
-    keyboard = ReplyKeyboardBuilder()
-
-    keyboard.row(
-        rkb("📁 Создать позицию ➕"), rkb("🗃 Создать категорию ➕"),
-    ).row(
-        rkb("📁 Изменить позицию 🖍"), rkb("🗃 Изменить категорию 🖍"),
-    ).row(
-        rkb("🔙 Главное меню"), rkb("🎁 Добавить товары ➕"), rkb("❌ Удаление"),
     )
 
     return keyboard.as_markup(resize_keyboard=True)

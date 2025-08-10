@@ -15,7 +15,8 @@ def servers_kb(page: int = 0) -> InlineKeyboardMarkup:
     end = min(start + PER_PAGE, len(SERVERS))
 
     for idx, server in enumerate(SERVERS[start:end], start=start):
-        builder.row(ikb(server, data=f"server_select:{idx}"))
+        builder.button(text=server, callback_data=f"server_select:{idx}")
+    builder.adjust(5)
 
     nav = []
     if page > 0:
@@ -27,6 +28,14 @@ def servers_kb(page: int = 0) -> InlineKeyboardMarkup:
     if nav:
         builder.row(*nav)
 
+    return builder.as_markup()
+
+
+def back_menu_kb(back: str) -> InlineKeyboardMarkup:
+    """Keyboard with back and menu buttons."""
+    builder = InlineKeyboardBuilder()
+    builder.row(ikb("⬅️ Назад", data=back))
+    builder.row(ikb("🔙 В меню", data="back_to_menu"))
     return builder.as_markup()
 
 

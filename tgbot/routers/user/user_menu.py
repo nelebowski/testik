@@ -17,22 +17,6 @@ from tgbot.utils.text_functions import open_profile_user
 router = Router(name=__name__)
 
 
-# Открытие товаров
-@router.message(F.text == "🎁 Купить")
-async def user_shop(message: Message, bot: Bot, state: FSM, arSession: ARS):
-    await state.clear()
-
-    get_categories = get_categories_items()
-
-    if len(get_categories) >= 1:
-        await message.answer(
-            "<b>🎁 Выберите нужный вам товар</b>",
-            reply_markup=prod_item_category_swipe_fp(0),
-        )
-    else:
-        await message.answer("<b>🎁 Увы, товары в данное время отсутствуют</b>")
-
-
 # Открытие профиля
 @router.message(F.text == "👤 Профиль")
 async def user_profile(message: Message, bot: Bot, state: FSM, arSession: ARS):
