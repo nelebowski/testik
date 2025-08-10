@@ -35,6 +35,16 @@ async def payment_yoomoney_open(message: Message, bot: Bot, state: FSM, arSessio
     )
 
 
+# Информация - Telegram Stars
+@router.message(F.text == "⭐️ Telegram Stars")
+async def payment_stars_open(message: Message, bot: Bot, state: FSM, arSession: ARS):
+    await state.clear()
+    await message.answer(
+        "<b>⭐️ Telegram Stars</b>\nОплата через звезды не требует настройки.",
+        reply_markup=close_finl(),
+    )
+
+
 ################################################################################
 ################################### CRYPTOBOT ##################################
 # Баланс - CryptoBot
