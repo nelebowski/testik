@@ -11,7 +11,6 @@ PER_PAGE = 25
 
 def servers_kb(page: int = 0) -> InlineKeyboardMarkup:
     builder = InlineKeyboardBuilder()
-
     start = page * PER_PAGE
     end = min(start + PER_PAGE, len(SERVERS))
 

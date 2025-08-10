@@ -23,14 +23,18 @@ async def support_start(call: CallbackQuery, state: FSM):
 
 @router.message(StateFilter("support_chat"))
 async def support_message(message: Message, state: FSM, bot: Bot):
-    """Forward user message to admins with reply button."""
+    """Forward user message to admins and attach reply button."""
     kb = InlineKeyboardBuilder()
     kb.row(ikb("Ответить", data=f"support_reply:{message.from_user.id}"))
 
-    text = f"Сообщение от {message.from_user.id}:\n{message.text}"
-
+    # Пересылаем оригинал + отдельное служебное сообщение с кнопкой ответа
     for admin in get_admins():
-        await bot.send_message(admin, text, reply_markup=kb.as_markup())
+        await message.forward(admin)
+        await bot.send_message(
+            admin,
+            f"Сообщение от {message.from_user.id}:\n{message.text}",
+            reply_markup=kb.as_markup(),
+        )
 
     await message.answer("Сообщение отправлено. Ожидайте ответа администратора.")
 
@@ -54,9 +58,22 @@ async def support_admin_reply(message: Message, state: FSM, bot: Bot):
     if not user_id:
         await message.answer("Не выбран пользователь для ответа.")
         return
+
     await bot.send_message(user_id, f"Ответ поддержки:\n{message.text}")
     await message.answer("Отправлено.")
     await state.clear()
+
+
+@router.message(F.text == "/stop", StateFilter("support_admin_reply"), F.from_user.id.in_(get_admins()))
+async def support_admin_stop(message: Message, state: FSM):
+    await state.clear()
+    await message.answer("Отменено.")
+
+
+@router.message(F.text == "/stop", StateFilter("support_chat"))
+async def support_stop(message: Message, state: FSM):
+    await state.clear()
+    await message.answer("Диалог с поддержкой завершен.", reply_markup=start_menu_finl())
 
 
 @router.message(F.text.startswith("/reply"))
@@ -64,24 +81,21 @@ async def admin_reply_cmd(message: Message, bot: Bot):
     """Alternative reply method: /reply <user_id> <text> (admins only)."""
     if message.from_user.id not in get_admins():
         return
+
     parts = message.text.split(maxsplit=2)
     if len(parts) < 3:
         await message.answer("Использование: /reply <user_id> <текст>")
         return
+
     try:
         user_id = int(parts[1])
     except ValueError:
         await message.answer("user_id должен быть числом.")
         return
+
     text = parts[2]
     await bot.send_message(user_id, f"Ответ поддержки:\n{text}")
     await message.answer("Отправлено.")
-
-
-@router.message(F.text == "/stop", StateFilter("support_chat"))
-async def support_stop(message: Message, state: FSM):
-    await state.clear()
-    await message.answer("Диалог с поддержкой завершен.", reply_markup=start_menu_finl())
 
 
 @router.callback_query(F.data == "reviews_start")
