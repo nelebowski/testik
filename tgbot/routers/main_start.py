@@ -55,7 +55,7 @@ async def filter_work_message(message: Message, bot: Bot, state: FSM, arSession:
 @router.callback_query(IsWork())
 async def filter_work_callback(call: CallbackQuery, bot: Bot, state: FSM, arSession: ARS):
     await state.clear()
-    await call.answer("⛔ Бот находится на технических работах.", True)
+    await call.answer("⛔ Бот находится на технических работах.", show_alert=True)
 
 ################################################################################
 ################################# СТАТУС ПОКУПОК ###############################
@@ -70,7 +70,7 @@ async def filter_buy_message(message: Message, bot: Bot, state: FSM, arSession: 
 @router.callback_query(IsBuy(), F.data.startswith(tuple(prohibit_buy)))
 async def filter_buy_callback(call: CallbackQuery, bot: Bot, state: FSM, arSession: ARS):
     await state.clear()
-    await call.answer("⛔ Покупки временно отключены.", True)
+    await call.answer("⛔ Покупки временно отключены.", show_alert=True)
 
 ################################################################################
 ############################### СТАТУС ПОПОЛНЕНИЙ ##############################
@@ -84,7 +84,7 @@ async def filter_refill_message(message: Message, bot: Bot, state: FSM, arSessio
 @router.callback_query(IsRefill(), F.data.startswith(tuple(prohibit_refill)))
 async def filter_refill_callback(call: CallbackQuery, bot: Bot, state: FSM, arSession: ARS):
     await state.clear()
-    await call.answer("⛔ Пополнение временно отключено.", True)
+    await call.answer("⛔ Пополнение временно отключено.", show_alert=True)
 
 ################################################################################
 #################################### ПРОЧЕЕ ####################################

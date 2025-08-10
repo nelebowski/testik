@@ -109,7 +109,7 @@ async def payment_choose(call: CallbackQuery, state: FSM, bot: Bot, arSession: A
     price = data["price"]
 
     if method == "stars":
-        # конвертируем рубли в звёзды (примерный курс)
+        # Конвертация ₽ -> звёзды (примерный курс)
         stars = ceil(price / 1.4)
         await bot.send_invoice(
             chat_id=call.from_user.id,

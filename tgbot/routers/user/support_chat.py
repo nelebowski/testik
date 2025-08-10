@@ -33,7 +33,9 @@ async def support_message(message: Message, state: FSM, bot: Bot):
     admin_kb.row(ikb("Завершить", data=f"support_close:{message.from_user.id}"))
 
     for admin in get_admins():
+        # Сохраняем оригинал (текст/медиа) через forward
         await message.forward(admin)
+        # Пояснение + кнопки для действий
         await bot.send_message(
             admin,
             f"Ответить пользователю {message.from_user.id}",
