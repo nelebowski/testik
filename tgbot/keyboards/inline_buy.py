@@ -1,4 +1,4 @@
-# - *- coding: utf-8 - *-
+# -*- coding: utf-8 -*-
 """Inline keyboards for buying virtual currency."""
 from aiogram.types import InlineKeyboardMarkup
 from aiogram.utils.keyboard import InlineKeyboardBuilder
@@ -11,8 +11,10 @@ PER_PAGE = 25
 
 def servers_kb(page: int = 0) -> InlineKeyboardMarkup:
     builder = InlineKeyboardBuilder()
+
     start = page * PER_PAGE
     end = min(start + PER_PAGE, len(SERVERS))
+
     for idx, server in enumerate(SERVERS[start:end], start=start):
         builder.row(ikb(server, data=f"server_select:{idx}"))
 
@@ -22,8 +24,10 @@ def servers_kb(page: int = 0) -> InlineKeyboardMarkup:
     nav.append(ikb("🔙 В меню", data="back_to_menu"))
     if end < len(SERVERS):
         nav.append(ikb("Вперед ➡️", data=f"servers_page:{page+1}"))
+
     if nav:
         builder.row(*nav)
+
     return builder.as_markup()
 
 
