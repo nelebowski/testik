@@ -3,7 +3,7 @@ from aiogram import Dispatcher, F
 
 from tgbot.routers import main_errors, main_start, main_missed
 from tgbot.routers.admin import admin_menu, admin_functions, admin_payment, admin_products, admin_settings
-from tgbot.routers.user import user_menu, user_transactions, user_products
+from tgbot.routers.user import user_menu, user_transactions, user_products, buy_virts, support_chat
 from tgbot.utils.misc.bot_filters import IsAdmin
 
 
@@ -28,6 +28,8 @@ def register_all_routers(dp: Dispatcher):
     dp.include_router(admin_menu.router)  # Админ роутер
     dp.include_router(user_products.router)  # Юзер роутер
     dp.include_router(user_transactions.router)  # Юзер роутер
+    dp.include_router(buy_virts.router)  # Покупка виртов
+    dp.include_router(support_chat.router)  # Чат поддержки и отзывы
     dp.include_router(admin_functions.router)  # Админ роутер
     dp.include_router(admin_payment.router)  # Админ роутер
     dp.include_router(admin_settings.router)  # Админ роутер
