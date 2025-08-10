@@ -7,6 +7,8 @@ from tgbot.database import Settingsx, Positionx, Categoryx
 from tgbot.keyboards.inline_user import user_support_finl
 from tgbot.keyboards.inline_user_page import prod_item_position_swipe_fp
 from tgbot.keyboards.reply_main import menu_frep
+from tgbot.keyboards.inline_main_menu import start_menu_finl
+from tgbot.data.config import get_admins
 from tgbot.utils.const_functions import ded
 from tgbot.utils.misc.bot_filters import IsBuy, IsRefill, IsWork
 from tgbot.utils.misc.bot_models import FSM, ARS
@@ -63,7 +65,6 @@ async def filter_work_callback(call: CallbackQuery, bot: Bot, state: FSM, arSess
 ################################################################################
 ################################# СТАТУС ПОКУПОК ###############################
 # Фильтр на доступность покупок - сообщение
-@router.message(IsBuy(), F.text == "🎁 Купить")
 @router.message(IsBuy(), StateFilter('here_item_count'))
 async def filter_buy_message(message: Message, bot: Bot, state: FSM, arSession: ARS):
     await state.clear()
@@ -102,17 +103,28 @@ async def filter_refill_callback(call: CallbackQuery, bot: Bot, state: FSM, arSe
 # Открытие главного меню
 @router.message(F.text.in_(('🔙 Главное меню', '/start')))
 async def main_start(message: Message, bot: Bot, state: FSM, arSession: ARS):
+    """Send main menu. Admins receive their keyboard and user inline menu."""
     await state.clear()
 
-    await message.answer(
-        ded("""
-            *🐻 Lebowski Store*
-            *🔸 Если не появилось меню*
-            *🔸 Введите /start*
-        """),
-        reply_markup=menu_frep(message.from_user.id),
-        parse_mode="MarkdownV2"
-    )
+    if message.from_user.id in get_admins():
+        await message.answer(
+            ded("""
+                *🐻 Lebowski Store*
+                *🔸 Если не появилось меню*
+                *🔸 Введите /start*
+            """),
+            reply_markup=menu_frep(message.from_user.id),
+            parse_mode="MarkdownV2"
+        )
+        await message.answer(
+            "<b>Добро пожаловать! Выберите действие:</b>",
+            reply_markup=start_menu_finl(),
+        )
+    else:
+        await message.answer(
+            "<b>Добро пожаловать! Выберите действие:</b>",
+            reply_markup=start_menu_finl(),
+        )
 
 
 
@@ -138,3 +150,25 @@ async def main_start_deeplink(message: Message, bot: Bot, state: FSM, arSession:
                 f"<b>🎁 Текущая категория: <code>{get_category.category_name}</code></b>",
                 reply_markup=prod_item_position_swipe_fp(0, category_id),
             )
+
+
+# Возврат в главное меню через колбэк
+@router.callback_query(F.data == "back_to_menu")
+async def back_to_menu(call: CallbackQuery, bot: Bot, state: FSM, arSession: ARS):
+    await state.clear()
+    await call.message.delete()
+
+    if call.from_user.id in get_admins():
+        await call.message.answer(
+            ded("""
+                *🐻 Lebowski Store*
+                *🔸 Если не появилось меню*
+                *🔸 Введите /start*
+            """),
+            reply_markup=menu_frep(call.from_user.id),
+            parse_mode="MarkdownV2",
+        )
+    await call.message.answer(
+        "<b>Добро пожаловать! Выберите действие:</b>",
+        reply_markup=start_menu_finl(),
+    )

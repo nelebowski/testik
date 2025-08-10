@@ -8,7 +8,7 @@ from aiogram.types import Message, FSInputFile
 from aiogram.utils.media_group import MediaGroupBuilder
 
 from tgbot.data.config import PATH_LOGS, PATH_DATABASE
-from tgbot.keyboards.reply_main import payments_frep, settings_frep, functions_frep, items_frep
+from tgbot.keyboards.reply_main import payments_frep, settings_frep, functions_frep
 from tgbot.utils.const_functions import get_date
 from tgbot.utils.misc.bot_models import FSM, ARS
 from tgbot.utils.misc_functions import get_statistics
@@ -46,17 +46,6 @@ async def admin_functions(message: Message, bot: Bot, state: FSM, arSession: ARS
     await message.answer(
         "<b>🔆 Общие функции бота</b>",
         reply_markup=functions_frep(),
-    )
-
-
-# Управление товарами
-@router.message(F.text == "🎁 Управление товарами")
-async def admin_products(message: Message, bot: Bot, state: FSM, arSession: ARS):
-    await state.clear()
-
-    await message.answer(
-        "<b>🎁 Редактирование товаров</b>",
-        reply_markup=items_frep(),
     )
 
 
